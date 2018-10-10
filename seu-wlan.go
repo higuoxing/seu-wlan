@@ -43,8 +43,10 @@ func login_request(param url.Values) (error, map[string]interface{}) {
   return nil, login_msg_json
 }
 
-func emit_log(login_msg_json map[string]interface{}) {
-  if login_msg_json["status"] == 1.0 {
+func emit_log(err error, login_msg_json map[string]interface{}) {
+  if err != nil {
+    log.Printf("network error, %v\n", err)
+  } else if login_msg_json["status"] == 1.0 {
     log.Printf("%v, login user: %v, login ip: %v, login loc: %v\n",
                login_msg_json["info"],
                login_msg_json["logout_username"],
@@ -56,31 +58,17 @@ func emit_log(login_msg_json map[string]interface{}) {
 }
 
 func run_in_loop(param url.Values, interval int) error {
-  err_ch := make(chan error)
-  go func() {
-    for {
-      err, login_msg_json := login_request(param)
-      if err != nil {
-        err_ch <- err
-      }
-      emit_log(login_msg_json)
-      time.Sleep(time.Duration(interval) * time.Second)
-    }
-  }()
-  err := <- err_ch
-  if err != nil {
-    log.Println(err)
+  for {
+    err, login_msg_json := login_request(param)
+    emit_log(err, login_msg_json)
+    time.Sleep(time.Duration(interval) * time.Second)
   }
-  close(err_ch)
   return nil
 }
 
 func run_once(param url.Values) error {
   err, login_msg_json := login_request(param)
-  if err != nil {
-    return err
-  }
-  emit_log(login_msg_json)
+  emit_log(err, login_msg_json)
   return nil
 }
 
