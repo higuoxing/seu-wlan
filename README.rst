@@ -9,7 +9,7 @@ Go 1.11
 
 Installation
 ------------
-$ 
+$ go get github.com/Higuoxing/seu-wlan
 
 Usage
 -----
