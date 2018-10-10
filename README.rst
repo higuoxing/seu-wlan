@@ -20,7 +20,8 @@ positional arguments:
   -p                      统一认证密码
 
 optional arguments:
-  -i                      设置轮询登录间隔，以秒为单位
+  -i                      设置轮询登录间隔，以秒为单位 (int)
+  -m                      设置是否允许记住 mac 地址 (1|0)
 
 Screenshots
 -----------
