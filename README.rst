@@ -9,11 +9,13 @@ Go 1.11
 
 Installation
 ------------
-$ go get github.com/Higuoxing/seu-wlan
+.. code:: sh
+  $ go get github.com/Higuoxing/seu-wlan
 
 Usage
 -----
-usage: seu-wlan -u username -p password [-i seconds]
+.. code:: sh
+  usage: seu-wlan -u username -p password [-i seconds] [-m 0|1]
 
 positional arguments:
   -u                      一卡通号码
