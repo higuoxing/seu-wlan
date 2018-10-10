@@ -45,7 +45,7 @@ func login_request(param url.Values) (error, map[string]interface{}) {
 
 func emit_log(err error, login_msg_json map[string]interface{}) {
   if err != nil {
-    log.Printf("network error, %v\n", err)
+    log.Printf("network error.\n")
   } else if login_msg_json["status"] == 1.0 {
     log.Printf("%v, login user: %v, login ip: %v, login loc: %v\n",
                login_msg_json["info"],
