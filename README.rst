@@ -16,8 +16,8 @@ Usage
 usage: seu-wlan -u username -p password [-i seconds]
 
 positional arguments:
-  username                一卡通号码
-  password                统一认证密码
+  -u                      一卡通号码
+  -p                      统一认证密码
 
 optional arguments:
   -i                      设置轮询登录间隔，以秒为单位
