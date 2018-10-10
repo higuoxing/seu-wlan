@@ -14,6 +14,19 @@ import (
 
 var SEU_WLAN_LOGIN_URL = "http://w.seu.edu.cn/index.php/index/login"
 
+// Loggers
+var (
+	Info    *log.Logger
+	Warning *log.Logger
+	Error   *log.Logger
+)
+
+func logger_init() {
+	Info = log.New(os.Stdout, "[Info]    ", log.Ldate|log.Ltime)
+	Warning = log.New(os.Stdout, "[Warning] ", log.Ldate|log.Ltime)
+	Error = log.New(os.Stdout, "[Error]   ", log.Ldate|log.Ltime)
+}
+
 func encode_param(username, password string, macauth int) url.Values {
 	b64pass := base64.StdEncoding.EncodeToString([]byte(password))
 	return url.Values{"username": {username},
@@ -43,15 +56,15 @@ func login_request(param url.Values) (error, map[string]interface{}) {
 
 func emit_log(err error, login_msg_json map[string]interface{}) {
 	if err != nil {
-		log.Printf("network error.\n")
+		Error.Printf("network error.\n")
 	} else if login_msg_json["status"] == 1.0 {
-		log.Printf("%v, login user: %v, login ip: %v, login loc: %v\n",
+		Info.Printf("%v, login user: %v, login ip: %v, login loc: %v\n",
 			login_msg_json["info"],
 			login_msg_json["logout_username"],
 			login_msg_json["logout_ip"],
 			login_msg_json["logout_location"])
 	} else {
-		log.Println(login_msg_json["info"])
+		Info.Println(login_msg_json["info"])
 	}
 }
 
@@ -87,6 +100,8 @@ func main() {
 	} else if *interval < 0 {
 		log.Fatalln("ERROR: interval param -i cannot less than 0.")
 	}
+
+	logger_init()
 
 	param := encode_param(*username, *password, *macauth)
 
