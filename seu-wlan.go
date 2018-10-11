@@ -34,15 +34,15 @@ var options *Options
 
 // Runtime error
 type RuntimeError struct {
-	err_type string
-	err_hint string
+	errType string
+	errHint string
 }
 
 func (err *RuntimeError) Error() string {
-	return fmt.Sprintf("[%v]  %v", err.err_type, err.err_hint)
+	return fmt.Sprintf("[%v]  %v", err.errType, err.errHint)
 }
 
-func logger_init() {
+func loggerInit() {
 	Info = log.New(os.Stdout, "[Info]    ", log.Ldate|log.Ltime)
 	Warning = log.New(os.Stdout, "[Warning] ", log.Ldate|log.Ltime)
 	Error = log.New(os.Stdout, "[Error]   ", log.Ldate|log.Ltime)
@@ -61,29 +61,29 @@ func init() {
 	}
 
 	// init loggers
-	logger_init()
+	loggerInit()
 }
 
 func main() {
 	flag.Parse()
 
-	err := check_options(options)
+	err := checkOptions(options)
 	if err != nil {
 		Error.Println(err)
 		flag.Usage()
 		os.Exit(1)
 	}
 
-	param := encode_param(options)
+	param := encodeParam(options)
 
 	if options.interval > 0 {
-		err := run_in_loop(param, options.interval)
+		err := runInLoop(param, options.interval)
 		if err != nil {
 			Error.Println(err)
 			os.Exit(1)
 		}
 	} else {
-		err := run_once(param)
+		err := runOnce(param)
 		if err != nil {
 			Error.Println(err)
 			os.Exit(1)
@@ -91,14 +91,14 @@ func main() {
 	}
 }
 
-func encode_param(options *Options) url.Values {
+func encodeParam(options *Options) url.Values {
 	b64pass := base64.StdEncoding.EncodeToString([]byte(options.password))
 	return url.Values{"username": {options.username},
 		"password":      {string(b64pass)},
 		"enablemacauth": {string(options.macauth)}}
 }
 
-func login_request(param url.Values, interval int) (error, map[string]interface{}) {
+func loginRequest(param url.Values, interval int) (error, map[string]interface{}) {
 	var client *http.Client
 	if interval > 0 {
 		client = &http.Client{Timeout: time.Second * time.Duration(interval)}
@@ -111,49 +111,49 @@ func login_request(param url.Values, interval int) (error, map[string]interface{
 	}
 	defer response.Body.Close()
 
-	login_msg_raw, err := ioutil.ReadAll(response.Body)
+	loginMsgRaw, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return &RuntimeError{"Read Response Error", "error occurred when reading response from server"}, nil
 	}
 
-	var login_msg_json map[string]interface{}
-	err = json.Unmarshal(login_msg_raw, &login_msg_json)
+	var loginMsgJson map[string]interface{}
+	err = json.Unmarshal(loginMsgRaw, &loginMsgJson)
 	if err != nil {
 		return &RuntimeError{"Parse JSON Error", "error occurred when parsing JSON format response"}, nil
 	}
-	return nil, login_msg_json
+	return nil, loginMsgJson
 }
 
-func emit_log(err error, login_msg_json map[string]interface{}) {
+func emitLog(err error, loginMsgJson map[string]interface{}) {
 	if err != nil {
 		Error.Println(err)
-	} else if login_msg_json["status"] == 1.0 {
+	} else if loginMsgJson["status"] == 1.0 {
 		Info.Printf("%v, login user: %v, login ip: %v, login loc: %v\n",
-			login_msg_json["info"],
-			login_msg_json["logout_username"],
-			login_msg_json["logout_ip"],
-			login_msg_json["logout_location"])
+			loginMsgJson["info"],
+			loginMsgJson["logout_username"],
+			loginMsgJson["logout_ip"],
+			loginMsgJson["logout_location"])
 	} else {
-		Info.Println(login_msg_json["info"])
+		Info.Println(loginMsgJson["info"])
 	}
 }
 
-func run_in_loop(param url.Values, interval int) error {
+func runInLoop(param url.Values, interval int) error {
 	for {
-		err, login_msg_json := login_request(param, interval)
-		emit_log(err, login_msg_json)
+		err, loginMsgJson := loginRequest(param, interval)
+		emitLog(err, loginMsgJson)
 		time.Sleep(time.Duration(interval) * time.Second)
 	}
 	return nil
 }
 
-func run_once(param url.Values) error {
-	err, login_msg_json := login_request(param, 0)
-	emit_log(err, login_msg_json)
+func runOnce(param url.Values) error {
+	err, loginMsgJson := loginRequest(param, 0)
+	emitLog(err, loginMsgJson)
 	return nil
 }
 
-func check_options(options *Options) error {
+func checkOptions(options *Options) error {
 	if options.username == "" || options.password == "" {
 		return &RuntimeError{"Command Parse Error", "username and password are required."}
 	} else if options.interval < 0 {
