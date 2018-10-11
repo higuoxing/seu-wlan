@@ -107,19 +107,19 @@ func login_request(param url.Values, interval int) (error, map[string]interface{
 	}
 	response, err := client.PostForm(SEU_WLAN_LOGIN_URL, param)
 	if err != nil {
-		return &RuntimeError{"HTTP Request Error", "error occured when sending post request"}, nil
+		return &RuntimeError{"HTTP Request Error", "error occurred when sending post request"}, nil
 	}
 	defer response.Body.Close()
 
 	login_msg_raw, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return &RuntimeError{"Read Response Error", "error occured when reading response from server"}, nil
+		return &RuntimeError{"Read Response Error", "error occurred when reading response from server"}, nil
 	}
 
 	var login_msg_json map[string]interface{}
 	err = json.Unmarshal(login_msg_raw, &login_msg_json)
 	if err != nil {
-		return &RuntimeError{"Parse JSON Error", "error occured when parsing JSON format response"}, nil
+		return &RuntimeError{"Parse JSON Error", "error occurred when parsing JSON format response"}, nil
 	}
 	return nil, login_msg_json
 }
