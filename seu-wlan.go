@@ -128,7 +128,7 @@ func emitLog(err error, loginMsgJson map[string]interface{}) {
 	if err != nil {
 		Error.Println(err)
 	} else if loginMsgJson["status"] == 1.0 {
-		Info.Printf("%v, login user: %v, login ip: %v, login loc: %v\n",
+		Info.Printf("%v\tlogin user: %v\tlogin ip: %v\tlogin loc: %v\n",
 			loginMsgJson["info"],
 			loginMsgJson["logout_username"],
 			loginMsgJson["logout_ip"],
