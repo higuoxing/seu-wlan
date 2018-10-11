@@ -98,8 +98,14 @@ func encode_param(options *Options) url.Values {
 		"enablemacauth": {string(options.macauth)}}
 }
 
-func login_request(param url.Values) (error, map[string]interface{}) {
-	response, err := http.PostForm(SEU_WLAN_LOGIN_URL, param)
+func login_request(param url.Values, interval int) (error, map[string]interface{}) {
+  var client *http.Client
+  if interval > 0 {
+    client = &http.Client{Timeout: time.Second * time.Duration(interval)}
+  } else {
+    client = &http.Client{}
+  }
+	response, err := client.PostForm(SEU_WLAN_LOGIN_URL, param)
 	if err != nil {
 		return &RuntimeError{"HTTP Request Error", "error occured when sending post request"}, nil
 	}
@@ -134,7 +140,7 @@ func emit_log(err error, login_msg_json map[string]interface{}) {
 
 func run_in_loop(param url.Values, interval int) error {
 	for {
-		err, login_msg_json := login_request(param)
+		err, login_msg_json := login_request(param, interval)
 		emit_log(err, login_msg_json)
 		time.Sleep(time.Duration(interval) * time.Second)
 	}
@@ -142,7 +148,7 @@ func run_in_loop(param url.Values, interval int) error {
 }
 
 func run_once(param url.Values) error {
-	err, login_msg_json := login_request(param)
+	err, login_msg_json := login_request(param, 0)
 	emit_log(err, login_msg_json)
 	return nil
 }
