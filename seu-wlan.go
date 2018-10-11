@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"flag"
-  "fmt"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -24,21 +24,22 @@ var (
 
 // Command line options
 type Options struct {
-  username string
-  password string
-  macauth  int
-  interval int
+	username string
+	password string
+	macauth  int
+	interval int
 }
+
 var options *Options
 
 // Runtime error
-type RuntimeError struct{
-  err_type string
-  err_hint string
+type RuntimeError struct {
+	err_type string
+	err_hint string
 }
 
 func (err *RuntimeError) Error() string {
-  return fmt.Sprintf("[%v]  %v", err.err_type, err.err_hint)
+	return fmt.Sprintf("[%v]  %v", err.err_type, err.err_hint)
 }
 
 func logger_init() {
@@ -48,30 +49,30 @@ func logger_init() {
 }
 
 func init() {
-  // init command options parser
-  options = &Options{}
-  flag.StringVar(&options.username, "u", "", "Your card number. (Required)")
-  flag.StringVar(&options.password, "p", "", "Your password. (Required)")
-  flag.IntVar(&options.macauth, "m", 0, "Enable seu-wlan remember your mac address. 0 (default) or 1.")
+	// init command options parser
+	options = &Options{}
+	flag.StringVar(&options.username, "u", "", "Your card number. (Required)")
+	flag.StringVar(&options.password, "p", "", "Your password. (Required)")
+	flag.IntVar(&options.macauth, "m", 0, "Enable seu-wlan remember your mac address. 0 (default) or 1.")
 	flag.IntVar(&options.interval, "i", 0, "Enable this plugin run in loop and request seu-wlan login server.")
-  flag.Usage = func() {
-    fmt.Println("Usage: seu-wlan [options] param")
-    flag.PrintDefaults()
-  }
+	flag.Usage = func() {
+		fmt.Println("Usage: seu-wlan [options] param")
+		flag.PrintDefaults()
+	}
 
-  // init loggers
+	// init loggers
 	logger_init()
 }
 
 func main() {
 	flag.Parse()
 
-  err := check_options(options)
-  if err != nil {
-    Error.Println(err)
-    flag.Usage()
-    os.Exit(1)
-  }
+	err := check_options(options)
+	if err != nil {
+		Error.Println(err)
+		flag.Usage()
+		os.Exit(1)
+	}
 
 	param := encode_param(options)
 
@@ -100,7 +101,7 @@ func encode_param(options *Options) url.Values {
 func login_request(param url.Values) (error, map[string]interface{}) {
 	response, err := http.PostForm(SEU_WLAN_LOGIN_URL, param)
 	if err != nil {
-    return &RuntimeError{"HTTP Request Error", "error occured when sending post request"}, nil
+		return &RuntimeError{"HTTP Request Error", "error occured when sending post request"}, nil
 	}
 	defer response.Body.Close()
 
@@ -147,12 +148,10 @@ func run_once(param url.Values) error {
 }
 
 func check_options(options *Options) error {
-  if options.username == "" || options.password == "" {
-    return &RuntimeError{"Command Parse Error", "username and password are required."}
+	if options.username == "" || options.password == "" {
+		return &RuntimeError{"Command Parse Error", "username and password are required."}
 	} else if options.interval < 0 {
-    return &RuntimeError{"Command Parse Error", "-i option cannot be less than 0."}
+		return &RuntimeError{"Command Parse Error", "-i option cannot be less than 0."}
 	}
-  return nil
+	return nil
 }
-
-
