@@ -33,12 +33,12 @@ type Options struct {
 var options *Options
 
 // Runtime error
-type RuntimeError struct {
+type runtimeError struct {
 	errType string
 	errHint string
 }
 
-func (err *RuntimeError) Error() string {
+func (err *runtimeError) Error() string {
 	return fmt.Sprintf("[%v]  %v", err.errType, err.errHint)
 }
 
@@ -107,19 +107,19 @@ func loginRequest(param url.Values, interval int) (error, map[string]interface{}
 	}
 	response, err := client.PostForm(SEU_WLAN_LOGIN_URL, param)
 	if err != nil {
-		return &RuntimeError{"HTTP Request Error", "error occurred when sending post request"}, nil
+		return &runtimeError{"HTTP Request Error", "error occurred when sending post request"}, nil
 	}
 	defer response.Body.Close()
 
 	loginMsgRaw, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return &RuntimeError{"Read Response Error", "error occurred when reading response from server"}, nil
+		return &runtimeError{"Read Response Error", "error occurred when reading response from server"}, nil
 	}
 
 	var loginMsgJson map[string]interface{}
 	err = json.Unmarshal(loginMsgRaw, &loginMsgJson)
 	if err != nil {
-		return &RuntimeError{"Parse JSON Error", "error occurred when parsing JSON format response"}, nil
+		return &runtimeError{"Parse JSON Error", "error occurred when parsing JSON format response"}, nil
 	}
 	return nil, loginMsgJson
 }
@@ -155,9 +155,9 @@ func runOnce(param url.Values) error {
 
 func checkOptions(options *Options) error {
 	if options.username == "" || options.password == "" {
-		return &RuntimeError{"Command Parse Error", "username and password are required."}
+		return &runtimeError{"Command Parse Error", "username and password are required."}
 	} else if options.interval < 0 {
-		return &RuntimeError{"Command Parse Error", "-i option cannot be less than 0."}
+		return &runtimeError{"Command Parse Error", "-i option cannot be less than 0."}
 	}
 	return nil
 }
