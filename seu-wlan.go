@@ -99,12 +99,12 @@ func encode_param(options *Options) url.Values {
 }
 
 func login_request(param url.Values, interval int) (error, map[string]interface{}) {
-  var client *http.Client
-  if interval > 0 {
-    client = &http.Client{Timeout: time.Second * time.Duration(interval)}
-  } else {
-    client = &http.Client{}
-  }
+	var client *http.Client
+	if interval > 0 {
+		client = &http.Client{Timeout: time.Second * time.Duration(interval)}
+	} else {
+		client = &http.Client{}
+	}
 	response, err := client.PostForm(SEU_WLAN_LOGIN_URL, param)
 	if err != nil {
 		return &RuntimeError{"HTTP Request Error", "error occured when sending post request"}, nil
