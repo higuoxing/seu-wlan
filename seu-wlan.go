@@ -77,18 +77,11 @@ func main() {
 	param := encodeParam(options)
 
 	if options.interval > 0 {
-		err := runInLoop(param, options.interval)
-		if err != nil {
-			Error.Println(err)
-			os.Exit(1)
-		}
+		runInLoop(param, options.interval)
 	} else {
-		err := runOnce(param)
-		if err != nil {
-			Error.Println(err)
-			os.Exit(1)
-		}
+		runOnce(param)
 	}
+	return
 }
 
 func encodeParam(options *Options) url.Values {
@@ -138,19 +131,17 @@ func emitLog(err error, loginMsgJson map[string]interface{}) {
 	}
 }
 
-func runInLoop(param url.Values, interval int) error {
+func runInLoop(param url.Values, interval int) {
 	for {
 		err, loginMsgJson := loginRequest(param, interval)
 		emitLog(err, loginMsgJson)
 		time.Sleep(time.Duration(interval) * time.Second)
 	}
-	return nil
 }
 
-func runOnce(param url.Values) error {
+func runOnce(param url.Values) {
 	err, loginMsgJson := loginRequest(param, 0)
 	emitLog(err, loginMsgJson)
-	return nil
 }
 
 func checkOptions(options *Options) error {
