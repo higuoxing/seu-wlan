@@ -24,6 +24,11 @@ positional arguments:
 optional arguments:
   -i                      设置轮询登录间隔，以秒为单位 (int)
   -m                      设置是否允许记住 mac 地址 (1|0)
+  -c                      如不想使用明文密码，可以使用配置文件
+
+Configuration
+-------------
+参见 ``config.json``
 
 Screenshots
 -----------
