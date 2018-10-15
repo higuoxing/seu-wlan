@@ -24,6 +24,7 @@ var (
 
 // Command line options
 type Options struct {
+	config   string
 	username string
 	password string
 	macauth  int
@@ -53,6 +54,7 @@ func init() {
 	options = &Options{}
 	flag.StringVar(&options.username, "u", "", "Your card number. (Required)")
 	flag.StringVar(&options.password, "p", "", "Your password. (Required)")
+	flag.StringVar(&options.config, "c", "", "Your config file.")
 	flag.IntVar(&options.macauth, "m", 0, "Enable seu-wlan remember your mac address. 0 (default) or 1.")
 	flag.IntVar(&options.interval, "i", 0, "Enable this plugin run in loop and request seu-wlan login server.")
 	flag.Usage = func() {
@@ -145,10 +147,51 @@ func runOnce(param url.Values) {
 }
 
 func checkOptions(options *Options) error {
+	if options.config != "" {
+		/* read from config file */
+		err := readConfigFile(options.config, options)
+		if err != nil {
+			return err
+		}
+	}
 	if options.username == "" || options.password == "" {
 		return &runtimeError{"Command Parse Error", "username and password are required."}
 	} else if options.interval < 0 {
 		return &runtimeError{"Command Parse Error", "-i option cannot be less than 0."}
 	}
+	return nil
+}
+
+func readConfigFile(path string, options *Options) error {
+	jsonFile, err := os.Open(path)
+	defer jsonFile.Close()
+
+	if err != nil {
+		return &runtimeError{"Config File Parse Error", "an error occurred when reading config file"}
+	}
+	byteVal, err := ioutil.ReadAll(jsonFile)
+
+	if err != nil {
+		return &runtimeError{"Config File Parse Error", "an error occurred when reading config file"}
+	}
+
+	var configJson map[string]interface{}
+	err = json.Unmarshal(byteVal, &configJson)
+
+	if err != nil {
+		return &runtimeError{"Config File Parse Error", "an error occurred when parsing config file"}
+	}
+
+	if configJson["username"] == nil || configJson["password"] == nil {
+		return &runtimeError{"Config File Parse Error", "username and password are required"}
+	}
+
+	options.username = configJson["username"].(string)
+	options.password = configJson["username"].(string)
+
+	if configJson["interval"] != nil {
+		options.interval = int(configJson["interval"].(float64))
+	}
+
 	return nil
 }
