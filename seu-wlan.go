@@ -186,11 +186,27 @@ func readConfigFile(path string, options *Options) error {
 		return &runtimeError{"Config File Parse Error", "username and password are required"}
 	}
 
-	options.username = configJson["username"].(string)
-	options.password = configJson["username"].(string)
+	switch ty := configJson["username"].(type) {
+	default:
+		return &runtimeError{"Config File Parse Error", fmt.Sprintf("username should be string format, not %T", ty)}
+	case string:
+		options.username = configJson["username"].(string)
+	}
+
+	switch ty := configJson["password"].(type) {
+	default:
+		return &runtimeError{"Config File Parse Error", fmt.Sprintf("password should be string format, not %T", ty)}
+	case string:
+		options.password = configJson["username"].(string)
+	}
 
 	if configJson["interval"] != nil {
-		options.interval = int(configJson["interval"].(float64))
+		switch ty := configJson["interval"].(type) {
+		default:
+			return &runtimeError{"Config File Parse Error", fmt.Sprintf("interval should be integer, not %T", ty)}
+		case float64:
+			options.interval = int(configJson["interval"].(float64))
+		}
 	}
 
 	return nil
