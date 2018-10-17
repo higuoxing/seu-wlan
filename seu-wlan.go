@@ -27,7 +27,6 @@ type Options struct {
 	config   string
 	username string
 	password string
-	macauth  int
 	interval int
 }
 
@@ -55,7 +54,6 @@ func init() {
 	flag.StringVar(&options.username, "u", "", "Your card number. (Required)")
 	flag.StringVar(&options.password, "p", "", "Your password. (Required)")
 	flag.StringVar(&options.config, "c", "", "Your config file.")
-	flag.IntVar(&options.macauth, "m", 0, "Enable seu-wlan remember your mac address. 0 (default) or 1.")
 	flag.IntVar(&options.interval, "i", 0, "Enable this plugin run in loop and request seu-wlan login server.")
 	flag.Usage = func() {
 		fmt.Println("Usage: seu-wlan [options] param")
@@ -90,12 +88,12 @@ func encodeParam(options *Options) url.Values {
 	b64pass := base64.StdEncoding.EncodeToString([]byte(options.password))
 	return url.Values{"username": {options.username},
 		"password":      {string(b64pass)},
-		"enablemacauth": {string(options.macauth)}}
+		"enablemacauth": {"0"} }
 }
 
 func loginRequest(param url.Values, interval int) (error, map[string]interface{}) {
 	var client *http.Client
-	if interval > 0 {
+	if interval != 0 {
 		client = &http.Client{Timeout: time.Second * time.Duration(interval)}
 	} else {
 		client = &http.Client{}
@@ -197,7 +195,7 @@ func readConfigFile(path string, options *Options) error {
 	default:
 		return &runtimeError{"Config File Parse Error", fmt.Sprintf("password should be string format, not %T", ty)}
 	case string:
-		options.password = configJson["username"].(string)
+		options.password = configJson["password"].(string)
 	}
 
 	if configJson["interval"] != nil {
