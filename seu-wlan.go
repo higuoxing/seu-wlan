@@ -165,7 +165,7 @@ func readConfigFile(path string, options *Options) error {
 	defer jsonFile.Close()
 
 	if err != nil {
-		return &runtimeError{"Config File Parse Error", "an error occurred when reading config file"}
+		return &runtimeError{"Config File Parse Error", "cannot find your config file in this path"}
 	}
 	byteVal, err := ioutil.ReadAll(jsonFile)
 
