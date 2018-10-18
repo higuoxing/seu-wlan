@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-var SEU_WLAN_LOGIN_URL = "http://w.seu.edu.cn/index.php/index/login"
+const SEU_WLAN_LOGIN_URL = "http://w.seu.edu.cn/index.php/index/login"
 
 // Loggers
 var (
@@ -88,7 +88,7 @@ func encodeParam(options *Options) url.Values {
 	b64pass := base64.StdEncoding.EncodeToString([]byte(options.password))
 	return url.Values{"username": {options.username},
 		"password":      {string(b64pass)},
-		"enablemacauth": {"0"} }
+		"enablemacauth": {"0"}}
 }
 
 func loginRequest(param url.Values, interval int) (error, map[string]interface{}) {
