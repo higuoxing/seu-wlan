@@ -143,7 +143,7 @@ func runInLoop(param url.Values, interval int) {
 func runOnce(param url.Values) {
 	err, loginMsgJson := loginRequest(param, 0)
 	if err != nil {
-		Error.fmtPrintln(err)
+		Error.Println(err)
 	}
 	emitLog(loginMsgJson)
 }
