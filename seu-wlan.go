@@ -87,8 +87,8 @@ func main() {
 func encodeParam(options *Options) url.Values {
 	b64pass := base64.StdEncoding.EncodeToString([]byte(options.password))
 	return url.Values{"username": {options.username},
-	"password":      {string(b64pass)},
-	"enablemacauth": {"0"}}
+		"password":      {string(b64pass)},
+		"enablemacauth": {"0"}}
 }
 
 func loginRequest(param url.Values, interval int) (error, map[string]interface{}) {
@@ -120,10 +120,10 @@ func loginRequest(param url.Values, interval int) (error, map[string]interface{}
 func emitLog(loginMsgJson map[string]interface{}) {
 	if loginMsgJson["status"] == 1.0 {
 		Info.Printf("%v\tlogin user: %v\tlogin ip: %v\tlogin loc: %v\n",
-		loginMsgJson["info"],
-		loginMsgJson["logout_username"],
-		loginMsgJson["logout_ip"],
-		loginMsgJson["logout_location"])
+			loginMsgJson["info"],
+			loginMsgJson["logout_username"],
+			loginMsgJson["logout_ip"],
+			loginMsgJson["logout_location"])
 	} else {
 		Info.Println(loginMsgJson["info"])
 	}
