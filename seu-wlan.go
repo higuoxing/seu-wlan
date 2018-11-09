@@ -134,6 +134,7 @@ func runInLoop(param url.Values, interval int) {
 		err, loginMsgJson := loginRequest(param, interval)
 		if err != nil {
 			Error.Println(err)
+      continue
 		}
 		emitLog(loginMsgJson)
 		time.Sleep(time.Duration(interval) * time.Second)
@@ -144,6 +145,7 @@ func runOnce(param url.Values) {
 	err, loginMsgJson := loginRequest(param, 0)
 	if err != nil {
 		Error.Println(err)
+    return
 	}
 	emitLog(loginMsgJson)
 }
