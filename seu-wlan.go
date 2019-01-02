@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"flag"
@@ -13,7 +14,7 @@ import (
 	"time"
 )
 
-const SEU_WLAN_LOGIN_URL = "http://w.seu.edu.cn/index.php/index/login"
+const SEU_WLAN_LOGIN_URL = "https://w.seu.edu.cn/index.php/index/login"
 
 // Loggers
 var (
@@ -92,14 +93,24 @@ func encodeParam(options *Options) url.Values {
 }
 
 func loginRequest(param url.Values, interval int) (error, map[string]interface{}) {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
 	var client *http.Client
+
 	if interval != 0 {
-		client = &http.Client{Timeout: time.Second * time.Duration(interval)}
+		client = &http.Client{
+			Transport: tr,
+			Timeout:   time.Second * time.Duration(interval),
+		}
 	} else {
-		client = &http.Client{}
+		client = &http.Client{
+			Transport: tr,
+		}
 	}
 	response, err := client.PostForm(SEU_WLAN_LOGIN_URL, param)
 	if err != nil {
+		fmt.Println(err)
 		return &runtimeError{"HTTP Request Error", "error occurred when sending post request"}, nil
 	}
 	defer response.Body.Close()
