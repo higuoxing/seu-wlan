@@ -33,3 +33,4 @@ Configuration
 Screenshots
 -----------
 .. image:: ./.screenshot/seu-wlan-screenshot.jpg
+
