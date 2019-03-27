@@ -1,7 +1,7 @@
 seu-wlan
 =========
 
-.. image:: https://goreportcard.com/badge/github.com/higuoxing/seu-wlan
+.. image:: https://goreportcard.com/badge/github.com/bosoncat/seu-wlan
 
 seu-wlan 是帮助自动登录东南大学校园网并防止掉线的小工具
 
