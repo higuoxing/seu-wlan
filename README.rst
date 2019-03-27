@@ -11,7 +11,7 @@ Go 1.11
 
 Installation
 ------------
-``$ go get github.com/Higuoxing/seu-wlan``
+``$ go get github.com/bosoncat/seu-wlan``
 
 Usage
 -----
