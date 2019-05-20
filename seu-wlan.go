@@ -180,11 +180,13 @@ func checkOptions(options *Options) error {
 			return err
 		}
 	}
+
 	if options.username == "" || options.password == "" {
 		return fmt.Errorf("Command Parsing Error: %s", "username and password are required")
 	} else if options.interval < 0 {
 		return fmt.Errorf("Command Parsing Error: %s", "-i option cannot be less than 0")
 	}
+
 	return nil
 }
 
@@ -195,6 +197,7 @@ func readConfigFile(path string, options *Options) error {
 	if err != nil {
 		return fmt.Errorf("Config File Parsing Error: %s", "cannot find your config file in this path")
 	}
+
 	byteVal, err := ioutil.ReadAll(jsonFile)
 
 	if err != nil {
