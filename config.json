@@ -1,0 +1,7 @@
+{
+  "username": "cardnumber",
+  "password": "password",
+  "interval": 10,
+  "enable-mac-auth": true,
+  "disable-tls-verification": false
+}
