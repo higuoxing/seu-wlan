@@ -20,12 +20,12 @@ usage: seu-wlan -u username -p password [-i seconds] [-enable-mac-auth] [-disabl
 ### Arguments
 | Options                   | Usage                                                             |
 | ------------------------- | ----------------------------------------------------------------- |
-| -u                        | 一卡通号码                                                        |
-| -p                        | 统一认证密码                                                      |
-| -i                        | 设置轮询登录间隔，以秒为单位 (int)                                |
-| -c                        | 如不想使用明文密码，可以使用配置文件                              |
-| -enable-mac-auth          | 允许记住本机 mac 地址                                             |
-| -disable-tls-verification | 偶尔会出现学校证书过期的情况，可以使用该选项跳过证书校验 (不推荐) |
+| -u                        | 一卡通号码                                                          |
+| -p                        | 统一认证密码                                                        |
+| -i                        | 设置轮询登录间隔，以秒为单位 (int)                                     |
+| -c                        | 如不想使用明文密码，可以使用配置文件                                    |
+| -enable-mac-auth          | 允许记住本机 mac 地址                                                |
+| -disable-tls-verification | 偶尔会出现学校证书过期的情况，可以使用该选项跳过证书校验 (不推荐)            |
 
 ### Configuration
 参见 ``config.json``
