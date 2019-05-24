@@ -9,7 +9,7 @@ Go 1.11
 ### Installation
 
 ```sh
-$ go get github.com/vgxbj/seu-wlan
+$ go get github.com/vgxbj/seu-wlan/cmd/seu-wlan
 ```
 
 ### Usage
