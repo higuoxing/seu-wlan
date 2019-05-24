@@ -1,12 +1,14 @@
 package worker
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/vgxbj/seu-wlan/pkg/config"
@@ -33,32 +35,60 @@ func NewWorker(o *config.Options) *Worker {
 	return &Worker{c}
 }
 
+// Workers ... Initialize more than one workers.
+func Workers(o *config.Options) []*Worker {
+	workers := make([]*Worker, o.Workers)
+
+	for i := 0; i < len(workers); i++ {
+		workers[i] = NewWorker(o)
+	}
+
+	return workers
+}
+
 // Login ... Send POST request.
-func (w *Worker) Login(url string, form url.Values) (string, error) {
-	resp, err := w.Client.PostForm(url, form)
+func (w *Worker) Login(ctx context.Context, form url.Values, msg chan<- string, errch chan<- error) {
+	// resp, err := w.Client.PostForm("https://w.seu.edu.cn/index.php/index/login", form)
+	req, err := http.NewRequest("POST", "https://w.seu.edu.cn/index.php/index/login", strings.NewReader(form.Encode()))
 	if err != nil {
-		return "", fmt.Errorf("HTTP Request Error: %s", "error occurred when sending post request")
+		errch <- fmt.Errorf("HTTP Request Error: %v", err)
+		return
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req = req.WithContext(ctx)
+
+	resp, err := w.Client.Do(req)
+
+	if err != nil {
+		errch <- fmt.Errorf("HTTP Request Error: %s", "error occurred when sending post request")
+		return
 	}
 	defer resp.Body.Close()
 
 	loginMsgRaw, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("Read Response Error: %s", "error occurred when reading response from server")
+		errch <- fmt.Errorf("Read Response Error: %s", "error occurred when reading response from server")
+		return
 	}
 
 	var loginMsgJSON map[string]interface{}
 	err = json.Unmarshal(loginMsgRaw, &loginMsgJSON)
 	if err != nil {
-		return "", fmt.Errorf("Parsing JSON Error: %s", "error occurred when parsing JSON format response")
+		errch <- fmt.Errorf("Parsing JSON Error: %s", "error occurred when parsing JSON format response")
+		return
 	}
 
 	if loginMsgJSON["status"] == 1.0 {
-		return fmt.Sprintf("%v\tlogin user: %v\tlogin ip: %v\tlogin loc: %v\n",
+		msg <- fmt.Sprintf("%v login user: %v login ip: %v login loc: %v\n",
 			loginMsgJSON["info"],
 			loginMsgJSON["logout_username"],
 			loginMsgJSON["logout_ip"],
-			loginMsgJSON["logout_location"]), nil
+			loginMsgJSON["logout_location"])
+		return
 	}
 
-	return fmt.Sprintf("%v", loginMsgJSON["info"]), nil
+	msg <- fmt.Sprintf("%v", loginMsgJSON["info"])
+
+	return
 }

@@ -119,7 +119,7 @@ func VerifyOptions(o *Options) error {
 	} else if o.Interval < 0 {
 		return fmt.Errorf("Command Parsing Error: %s", "-i option cannot be less than 0")
 	} else if o.Workers <= 0 {
-		return fmt.Errorf("Command Parsing Error: %s", "-w option should be greater than 0")
+		return fmt.Errorf("Command Parsing Error: %s", "number of workers should be greater than 0")
 	}
 
 	return nil

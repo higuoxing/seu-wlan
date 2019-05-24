@@ -13,11 +13,11 @@ type Logger struct {
 }
 
 // NewLogger ... Initialize new logger.
-func NewLogger(f *os.File) *Logger {
+func NewLogger() *Logger {
 	return &Logger{
-		log.New(f, "[Info]    ", log.Ldate|log.Ltime),
-		log.New(f, "[Warning] ", log.Ldate|log.Ltime),
-		log.New(f, "[Error]   ", log.Ldate|log.Ltime),
+		log.New(os.Stdout, "[Info]    ", log.Ldate|log.Ltime),
+		log.New(os.Stderr, "[Warning] ", log.Ldate|log.Ltime),
+		log.New(os.Stderr, "[Error]   ", log.Ldate|log.Ltime),
 	}
 }
 
