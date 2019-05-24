@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/vgxbj/seu-wlan/pkg/config"
@@ -13,22 +14,22 @@ import (
 )
 
 var (
-	o *config.Options
-	l *logger.Logger
+	options *config.Options
+	log     *logger.Logger
 )
 
 func init() {
-	o = &config.Options{}
-	l = logger.NewLogger()
+	options = &config.Options{}
+	log = logger.NewLogger()
 
-	flag.StringVar(&o.Username, "u", "", "Your card number. (Required)")
-	flag.StringVar(&o.Password, "p", "", "Your password. (Required)")
-	flag.StringVar(&o.ConfigFile, "c", "", "Your config file.")
-	flag.IntVar(&o.Interval, "i", 0, "Run this tool periodically.")
-	flag.IntVar(&o.Timeout, "timeout", 1, "Timeout of login request.")
-	flag.IntVar(&o.Workers, "workers", 1, "Number of workers to send request. (Experimental)")
-	flag.BoolVar(&o.EnableMacAuth, "enable-mac-auth", false, "Enable this machine's mac address to be remembered.")
-	flag.BoolVar(&o.DisableTLSVerification, "disable-tls-verification", false, "Disable TLS certificate verification.")
+	flag.StringVar(&options.Username, "u", "", "Your card number. (Required)")
+	flag.StringVar(&options.Password, "p", "", "Your password. (Required)")
+	flag.StringVar(&options.ConfigFile, "c", "", "Your config file.")
+	flag.IntVar(&options.Interval, "i", 0, "Run this tool periodically.")
+	flag.IntVar(&options.Timeout, "timeout", 1, "Timeout of login request.")
+	flag.IntVar(&options.Workers, "workers", 1, "Number of workers to send request. (Experimental)")
+	flag.BoolVar(&options.EnableMacAuth, "enable-mac-auth", false, "Enable this machine's mac address to be remembered.")
+	flag.BoolVar(&options.DisableTLSVerification, "disable-tls-verification", false, "Disable TLS certificate verification.")
 
 	flag.Usage = func() {
 		fmt.Println("Usage: seu-wlan [options] param")
@@ -39,38 +40,45 @@ func init() {
 func main() {
 	flag.Parse()
 
-	err := config.VerifyOptions(o)
+	err := config.VerifyOptions(options)
 	if err != nil {
-		l.Errorf("%v", err)
+		log.Errorf("%v", err)
 		flag.Usage()
 		os.Exit(1)
 	}
 
-	workers := worker.Workers(o)
-	form := config.EncodePOSTForm(o)
+	workers := worker.Workers(options)
+	form := config.EncodePOSTForm(options)
 	infoch := make(chan string)
 	errch := make(chan error)
+	var wg sync.WaitGroup
 
 	for {
+		wg.Add(1)
+
 		go func() {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
+
 			for _, w := range workers {
-				w.Login(ctx, form, infoch, errch)
+				go w.Login(ctx, form, infoch, errch)
 			}
+
+			select {
+			case info := <-infoch:
+				log.Infof("%s", info)
+			case err := <-errch:
+				log.Errorf("%v", err)
+			case <-time.After(time.Duration(options.Timeout) * time.Second):
+				log.Errorf("HTTP Request Error: Timeout")
+			}
+
+			wg.Done()
 		}()
 
-		select {
-		case s := <-infoch:
-			l.Infof("%s", s)
-		case errch := <-errch:
-			l.Errorf("%v", errch)
-		case <-time.After(time.Duration(o.Timeout) * time.Second):
-			l.Errorf("HTTP Request Error: Timeout")
-		}
-
-		if o.Interval > 0 {
-			<-time.After(time.Duration(o.Interval) * time.Second)
+		wg.Wait()
+		if options.Interval > 0 {
+			<-time.After(time.Duration(options.Interval) * time.Second)
 		} else {
 			break
 		}

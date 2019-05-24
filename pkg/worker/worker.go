@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/vgxbj/seu-wlan/pkg/config"
 )
@@ -29,7 +28,6 @@ func NewWorker(o *config.Options) *Worker {
 
 	c := &http.Client{
 		Transport: t,
-		Timeout:   time.Duration(o.Timeout) * time.Second,
 	}
 
 	return &Worker{c}
@@ -47,8 +45,7 @@ func Workers(o *config.Options) []*Worker {
 }
 
 // Login ... Send POST request.
-func (w *Worker) Login(ctx context.Context, form url.Values, msg chan<- string, errch chan<- error) {
-	// resp, err := w.Client.PostForm("https://w.seu.edu.cn/index.php/index/login", form)
+func (w *Worker) Login(ctx context.Context, form url.Values, infoch chan<- string, errch chan<- error) {
 	req, err := http.NewRequest("POST", "https://w.seu.edu.cn/index.php/index/login", strings.NewReader(form.Encode()))
 	if err != nil {
 		errch <- fmt.Errorf("HTTP Request Error: %v", err)
@@ -59,10 +56,15 @@ func (w *Worker) Login(ctx context.Context, form url.Values, msg chan<- string, 
 	req = req.WithContext(ctx)
 
 	resp, err := w.Client.Do(req)
-
 	if err != nil {
-		errch <- fmt.Errorf("HTTP Request Error: %s", "error occurred when sending post request")
-		return
+		select {
+		// If this error is caused by canceling context, then we suppress this error.
+		case <-ctx.Done():
+			return
+		default:
+			errch <- err
+			return
+		}
 	}
 	defer resp.Body.Close()
 
@@ -80,7 +82,7 @@ func (w *Worker) Login(ctx context.Context, form url.Values, msg chan<- string, 
 	}
 
 	if loginMsgJSON["status"] == 1.0 {
-		msg <- fmt.Sprintf("%v login user: %v login ip: %v login loc: %v\n",
+		infoch <- fmt.Sprintf("%v login user: %v login ip: %v login loc: %v\n",
 			loginMsgJSON["info"],
 			loginMsgJSON["logout_username"],
 			loginMsgJSON["logout_ip"],
@@ -88,7 +90,7 @@ func (w *Worker) Login(ctx context.Context, form url.Values, msg chan<- string, 
 		return
 	}
 
-	msg <- fmt.Sprintf("%v", loginMsgJSON["info"])
+	infoch <- fmt.Sprintf("%v", loginMsgJSON["info"])
 
 	return
 }
