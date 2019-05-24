@@ -14,7 +14,7 @@ $ go get github.com/vgxbj/seu-wlan/cmd/seu-wlan
 
 ### Usage
 ```
-usage: seu-wlan -u username -p password [-i seconds] [-enable-mac-auth] [-disable-tls-verification]
+usage: seu-wlan -u username -p password [-i seconds] [-timeout seconds] [-enable-mac-auth] [-disable-tls-verification]
 ```
 
 ### Arguments
