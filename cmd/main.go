@@ -26,7 +26,7 @@ func init() {
 	flag.StringVar(&o.ConfigFile, "c", "", "Your config file.")
 	flag.IntVar(&o.Interval, "i", 0, "Run this tool periodically.")
 	flag.IntVar(&o.Timeout, "timeout", 1, "Timeout of login request.")
-	flag.IntVar(&o.Workers, "workers", 1, "Number of workers to send request. (Not implemented)")
+	flag.IntVar(&o.Workers, "workers", 1, "Number of workers to send request. (Experimental)")
 	flag.BoolVar(&o.EnableMacAuth, "enable-mac-auth", false, "Enable this machine's mac address to be remembered.")
 	flag.BoolVar(&o.DisableTLSVerification, "disable-tls-verification", false, "Disable TLS certificate verification.")
 
