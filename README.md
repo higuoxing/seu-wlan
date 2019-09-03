@@ -1,4 +1,4 @@
-## seu-wlan
+## seu-wlan (DEPRECATED)
 
 seu-wlan 是帮助自动登录东南大学校园网并防止掉线的小工具
 
