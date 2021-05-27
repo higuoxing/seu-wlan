@@ -1,0 +1,112 @@
+#!/usr/bin/env python3
+
+import argparse
+import json
+import requests
+from requests.models import PreparedRequest
+import sys
+from urllib3.exceptions import InsecureRequestWarning
+# Suppress only the single warning from urllib3 needed.
+requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+
+LOGIN_URL_TMPL = "{}://{}:801/eportal/"
+
+parser = argparse.ArgumentParser(description="Login to SEU-WLAN automatically.")
+parser.add_argument("-u", "--username", help="username")
+parser.add_argument("-p", "--password", help="password")
+parser.add_argument("-t", "--timeout", help="HTTP timeout")
+args = parser.parse_args()
+
+TIMEOUT = 3
+if args.timeout != None:
+   TIMEOUT = args.timeout
+
+def eprint(*args, **kwargs):
+   print(*args, file=sys.stderr, **kwargs)
+
+def get_redirect_url():
+   try:
+      r = requests.get("http://1.1.1.1", allow_redirects=False, timeout=TIMEOUT)
+      if r.status_code == 302:
+         return (r.headers['Location'], True)
+      return ("", False)
+   except Exception as e:
+      return ("", False)
+
+def login_over_http_or_https(netloc, params):
+   try:
+      r = requests.get(LOGIN_URL_TMPL.format("http", netloc),
+                       params=params, timeout=TIMEOUT)
+      if r.status_code == 400:
+         r = requests.get(LOGIN_URL_TMPL.format("https", netloc),
+                          params=params, verify=False, timeout=TIMEOUT)
+      if r.status_code == 200:
+         status = json.loads(r.text[1:-1])
+         ip_addr = params["wlan_user_ip"]
+         ## See a42.js
+         ret_code_mapping = {
+            "0": ("Login successfully, IP: {}".format(ip_addr), True),
+            "1": ("Incorrect username or password", False),
+            "2": ("The IP: {} have alredy been online".format(ip_addr), True),
+            "3": ("System busy", False),
+            "4": ("Unknown error", False),
+            "5": ("REQ_CHALLENGE failed", False),
+            "6": ("REQ_CHALLENGH timeout", False),
+            "7": ("Authentication failed", False),
+            "8": ("Authentication timeout", False),
+            "9": ("Logout failed", False),
+            "10": ("Logout timeout", False),
+            "11": ("I have no idea wtf happens", False),
+         }
+         if status["result"] == "1":
+            return ("Success", True)
+         if status["result"] == "0":
+            if str(status["ret_code"]) in ret_code_mapping:
+               return ret_code_mapping[str(status["ret_code"])]
+         return ("r.status_code == 200, but I don't known happens", False)
+      return ("r.status_code != 200", False)
+   except Exception as e:
+      return ("Catched an exception: '{}'".format(e), False)
+
+def login(url, username, password):
+   parsed = requests.utils.urlparse(url)
+
+   params = dict(x.split("=") for x in parsed.query.split("&"))
+   wlan_user_ip = params["UserIP"]
+   wlan_ac_name = params["wlanacname"]
+
+   params = {
+      "c": "Portal",
+      "a": "login",
+      "callback": "",
+      "login_method": "1",
+      "user_account": ",0,{}".format(username),
+      "user_password": password,
+      "wlan_user_ip": wlan_user_ip,
+      "wlan_user_ipv6": "",
+      "wlan_user_mac": "000000000000",
+      "wlan_ac_ip": "",
+      "wlan_ac_name": wlan_ac_name,
+      "jsVersion": "3.3.2",
+      "v": "8094"
+   }
+
+   msg, ok = login_over_http_or_https(parsed.netloc, params)
+   if ok:
+      print(msg)
+   else:
+      eprint(msg)
+
+if __name__ == "__main__":
+   redirect_url, ok = get_redirect_url()
+   username = args.username
+   password = args.password
+   if username == None or password == None:
+      eprint("Please provide username and password\n")
+      parser.print_help()
+      exit(1)
+   if ok:
+      login(redirect_url, username, password)
+   else:
+      eprint("Cannot get the redirect URL")
+   exit(0)

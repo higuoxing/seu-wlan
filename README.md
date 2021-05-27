@@ -1,20 +1,22 @@
-## seu-wlan (DEPRECATED)
+## seu-wlan V2
 
 seu-wlan 是帮助自动登录东南大学校园网并防止掉线的小工具
 
 ### Requirements
 
-Go 1.11
+* Python3.6+
+* requests
 
 ### Installation
 
 ```sh
-$ go get github.com/vgxbj/seu-wlan/cmd/seu-wlan
+pip3 install requests --user
+git clone https://github.com/higuoxing/seu-wlan.git
 ```
 
 ### Usage
 ```
-usage: seu-wlan -u username -p password [-i seconds] [-timeout seconds] [-enable-mac-auth] [-disable-tls-verification]
+usage: seu-wlan -u username -p password [-t seconds]
 ```
 
 ### Arguments
@@ -22,15 +24,7 @@ usage: seu-wlan -u username -p password [-i seconds] [-timeout seconds] [-enable
 | ------------------------- | ----------------------------------------------------------------- |
 | -u                        | 一卡通号码                                                          |
 | -p                        | 统一认证密码                                                        |
-| -i                        | 设置轮询登录间隔，以秒为单位 (int)                                     |
-| -c                        | 如不想使用明文密码，可以使用配置文件                                    |
-| -workers                  | 启用多个客户端进行请求                                                |
-| -timeout                  | 客户端超时时间                                                      |
-| -enable-mac-auth          | 允许记住本机 mac 地址                                                |
-| -disable-tls-verification | 偶尔会出现学校证书过期的情况，可以使用该选项跳过证书校验 (不推荐)            |
-
-### Configuration
-参见 ``config.json``
+| -t                        | 客户端超时时间                                                      |
 
 ### Screenshots
 ![](./.screenshot/seu-wlan-screenshot.jpg)
