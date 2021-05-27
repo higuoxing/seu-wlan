@@ -19,7 +19,7 @@ args = parser.parse_args()
 
 TIMEOUT = 3
 if args.timeout != None:
-   TIMEOUT = args.timeout
+   TIMEOUT = int(args.timeout)
 
 def eprint(*args, **kwargs):
    print(*args, file=sys.stderr, **kwargs)
@@ -68,12 +68,18 @@ def login_over_http_or_https(netloc, params):
    except Exception as e:
       return ("Catched an exception: '{}'".format(e), False)
 
+def get_via_possible_keys(keys, ht):
+   for k in keys:
+      if k in ht:
+         return ht[k]
+   return ""
+
 def login(url, username, password):
    parsed = requests.utils.urlparse(url)
-
    params = dict(x.split("=") for x in parsed.query.split("&"))
-   wlan_user_ip = params["UserIP"]
-   wlan_ac_name = params["wlanacname"]
+   wlan_user_ip = get_via_possible_keys(["UserIP", "wlanuserip"], params)
+   wlan_ac_name = get_via_possible_keys(["wlanacname"], params)
+   wlan_ac_ip = get_via_possible_keys(["wlanacip"], params)
 
    params = {
       "c": "Portal",
@@ -85,7 +91,7 @@ def login(url, username, password):
       "wlan_user_ip": wlan_user_ip,
       "wlan_user_ipv6": "",
       "wlan_user_mac": "000000000000",
-      "wlan_ac_ip": "",
+      "wlan_ac_ip": wlan_ac_ip,
       "wlan_ac_name": wlan_ac_name,
       "jsVersion": "3.3.2",
       "v": "8094"
@@ -98,15 +104,15 @@ def login(url, username, password):
       eprint(msg)
 
 if __name__ == "__main__":
-   redirect_url, ok = get_redirect_url()
    username = args.username
    password = args.password
    if username == None or password == None:
       eprint("Please provide username and password\n")
       parser.print_help()
       exit(1)
+   url, ok = get_redirect_url()
    if ok:
-      login(redirect_url, username, password)
+      login(url, username, password)
    else:
       eprint("Cannot get the redirect URL")
    exit(0)
