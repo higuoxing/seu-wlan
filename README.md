@@ -4,7 +4,7 @@ seu-wlan 是帮助自动登录东南大学校园网并防止掉线的小工具
 
 ### Requirements
 
-* Python3.6+
+* Python 3.6+
 * requests
 
 ### Installation
@@ -26,5 +26,6 @@ usage: seu-wlan -u username -p password [-t seconds]
 | -p                        | 统一认证密码                                                        |
 | -t                        | 客户端超时时间                                                      |
 
-### Screenshots
-![](./.screenshot/seu-wlan-screenshot.jpg)
+### Screenshot
+
+![](./.screenshot/seu-wlan-screenshot.png)
