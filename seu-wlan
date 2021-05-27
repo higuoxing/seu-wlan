@@ -9,6 +9,10 @@ from urllib3.exceptions import InsecureRequestWarning
 # Suppress only the single warning from urllib3 needed.
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
+# Disable Proxies
+session = requests.Session()
+session.trust_env = False
+
 LOGIN_URL_TMPL = "{}://{}:801/eportal/"
 
 parser = argparse.ArgumentParser(description="Login to SEU-WLAN automatically.")
@@ -26,7 +30,7 @@ def eprint(*args, **kwargs):
 
 def get_redirect_url():
    try:
-      r = requests.get("http://1.1.1.1", allow_redirects=False, timeout=TIMEOUT)
+      r = session.get("http://1.1.1.1", allow_redirects=False, timeout=TIMEOUT)
       if r.status_code == 302:
          return (r.headers['Location'], True)
       return ("", False)
@@ -35,10 +39,10 @@ def get_redirect_url():
 
 def login_over_http_or_https(netloc, params):
    try:
-      r = requests.get(LOGIN_URL_TMPL.format("http", netloc),
+      r = session.get(LOGIN_URL_TMPL.format("http", netloc),
                        params=params, timeout=TIMEOUT)
       if r.status_code == 400:
-         r = requests.get(LOGIN_URL_TMPL.format("https", netloc),
+         r = session.get(LOGIN_URL_TMPL.format("https", netloc),
                           params=params, verify=False, timeout=TIMEOUT)
       if r.status_code == 200:
          status = json.loads(r.text[1:-1])
