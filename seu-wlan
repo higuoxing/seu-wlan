@@ -59,10 +59,10 @@ def login_over_http_or_https(netloc, params):
             "11": ("I have no idea wtf happens", False),
          }
          if status["result"] == "1":
-            return ("Success", True)
-         if status["result"] == "0":
-            if str(status["ret_code"]) in ret_code_mapping:
-               return ret_code_mapping[str(status["ret_code"])]
+            return ("Login Successfully, IP: {}".format(ip_addr), True)
+         if status["result"] == "0" and \
+              str(status["ret_code"]) in ret_code_mapping:
+            return ret_code_mapping[str(status["ret_code"])]
          return ("r.status_code == 200, but I don't known happens", False)
       return ("r.status_code != 200", False)
    except Exception as e:
