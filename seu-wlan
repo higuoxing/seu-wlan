@@ -29,9 +29,20 @@ def get_redirect_url():
       r = requests.get("http://1.1.1.1", allow_redirects=False, timeout=TIMEOUT)
       if r.status_code == 302:
          return (r.headers['Location'], True)
+      elif r.status_code == 200 or r.status_code == 301:
+         ## If the status code is 200 or 301, we've connected to the internet.
+         return ("", True)
       return ("", False)
    except Exception as e:
-      return ("", False)
+      ## https://1.1.1.1 is blocked by GFW
+      ## Let's try to connect to baidu.com.
+      try:
+         r = requests.get("https://baidu.com", timeout=TIMEOUT)
+         if r.status_code == 200 or r.status_code == 301:
+            return ("", True)
+         return ("", False)
+      except:
+         return ("", False)
 
 def login_over_http_or_https(netloc, params):
    try:
@@ -106,7 +117,10 @@ if __name__ == "__main__":
       parser.print_help()
       exit(1)
    if ok:
-      login(redirect_url, username, password)
+      if redirect_url != "":
+         login(redirect_url, username, password)
+      else:
+         eprint("You've connected to the internet")
    else:
       eprint("Cannot get the redirect URL")
    exit(0)
