@@ -16,9 +16,11 @@ session.trust_env = False
 LOGIN_URL_TMPL = "{}://{}:801/eportal/"
 
 parser = argparse.ArgumentParser(description="Login to SEU-WLAN automatically.")
-parser.add_argument("-u", "--username", help="username")
-parser.add_argument("-p", "--password", help="password")
+parser.add_argument("-u", "--username", help="username", required=True)
+parser.add_argument("-p", "--password", help="password", required=True)
 parser.add_argument("-t", "--timeout", help="HTTP timeout")
+parser.add_argument("-i", "--ISP", help="ISP, c: 中国移动(cmcc), t: 中国电信(telecom), u: 中国联通(unicom), empty or else: 校园网")
+parser.add_argument("-l", "--link", help="redirect link, for example: http://10.80.128.2/a79.htm?UserIP=10.208.25.1&wlanacname=")
 args = parser.parse_args()
 
 TIMEOUT = 3
@@ -121,11 +123,21 @@ def login(url, username, password):
 if __name__ == "__main__":
    username = args.username
    password = args.password
+   isp = args.ISP
    if username == None or password == None:
       eprint("Please provide username and password\n")
       parser.print_help()
       exit(1)
-   url, ok = get_redirect_url()
+   if isp == "c":
+      username += "@cmcc"
+   elif isp == "t":
+      username += "@telecom"
+   elif isp == "u":
+      username += "@unicom"
+   if args.link != None:
+      url, ok = args.link, True
+   else:
+      url, ok = get_redirect_url()
    if ok:
       if url != "":
          login(url, username, password)
