@@ -195,7 +195,6 @@ if __name__ == "__main__":
 
    if args.link != None:
       url, ok = args.link, True
-      print(args.relogin)
       if args.relogin:
          logout(url, username, mac)
    else:
