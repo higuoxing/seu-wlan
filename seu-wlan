@@ -15,33 +15,43 @@ session.trust_env = False
 
 LOGIN_URL_TMPL = "{}://{}:801/eportal/"
 
-parser = argparse.ArgumentParser(description="Login to SEU-WLAN automatically.")
+parser = argparse.ArgumentParser(
+   description="Login to SEU-WLAN automatically.")
 parser.add_argument("-u", "--username", help="username", required=True)
 parser.add_argument("-p", "--password", help="password", required=True)
 parser.add_argument("-t", "--timeout", help="HTTP timeout")
-parser.add_argument("-i", "--ISP", help="ISP, c: 中国移动(cmcc), t: 中国电信(telecom), u: 中国联通(unicom), empty or else: 校园网")
-parser.add_argument("-l", "--link", help="redirect link, for example: http://10.80.128.2/a79.htm?UserIP=10.208.25.1&wlanacname=")
+parser.add_argument(
+   "-i", "--ISP", help="ISP, c: 中国移动(cmcc), t: 中国电信(telecom), u: 中国联通(unicom), empty or else: 校园网")
+parser.add_argument(
+   "-l", "--link", help="redirect link, for example: http://10.80.128.2/a79.htm?UserIP=10.208.25.1&wlanacname=")
+parser.add_argument("-r", "--relogin", action="store_true", default=False,
+               help="try to log out first then log in, requires -l")
+parser.add_argument(
+   "-m", "--mac", help="MAC address, mainly used in unbind_mac")
 args = parser.parse_args()
 
 TIMEOUT = 3
 if args.timeout != None:
    TIMEOUT = int(args.timeout)
 
+
 def eprint(*args, **kwargs):
    print(*args, file=sys.stderr, **kwargs)
 
+
 def get_redirect_url():
    try:
-      r = session.get("http://1.1.1.1", allow_redirects=False, timeout=TIMEOUT)
+      r = session.get("http://1.1.1.1",
+                  allow_redirects=False, timeout=TIMEOUT)
       if r.status_code == 302:
          return (r.headers['Location'], True)
       elif r.status_code == 200 or r.status_code == 301:
-         ## If the status code is 200 or 301, we've connected to the internet.
+         # If the status code is 200 or 301, we've connected to the internet.
          return ("", True)
       return ("", False)
    except Exception as e:
-      ## https://1.1.1.1 is blocked by GFW
-      ## Let's try to connect to baidu.com.
+      # https://1.1.1.1 is blocked by GFW
+      # Let's try to connect to baidu.com.
       try:
          r = requests.get("https://baidu.com", timeout=TIMEOUT)
          if r.status_code == 200 or r.status_code == 301:
@@ -50,17 +60,18 @@ def get_redirect_url():
       except:
          return ("", False)
 
-def login_over_http_or_https(netloc, params):
+
+def get_over_http_or_https(netloc, params):
    try:
       r = session.get(LOGIN_URL_TMPL.format("http", netloc),
-                       params=params, timeout=TIMEOUT)
+                  params=params, timeout=TIMEOUT)
       if r.status_code == 400:
          r = session.get(LOGIN_URL_TMPL.format("https", netloc),
-                          params=params, verify=False, timeout=TIMEOUT)
+                     params=params, verify=False, timeout=TIMEOUT)
       if r.status_code == 200:
          status = json.loads(r.text[1:-1])
          ip_addr = params["wlan_user_ip"]
-         ## See a42.js
+         # See a42.js
          ret_code_mapping = {
             "0": ("Login successfully, IP: {}".format(ip_addr), True),
             "1": ("Incorrect username or password", False),
@@ -76,14 +87,15 @@ def login_over_http_or_https(netloc, params):
             "11": ("I have no idea wtf happens", False),
          }
          if status["result"] == "1":
-            return ("Login Successfully, IP: {}".format(ip_addr), True)
+            return ("{} Successfully, IP: {}".format(params["a"], ip_addr), True)
          if status["result"] == "0" and \
-              str(status["ret_code"]) in ret_code_mapping:
+               str(status["ret_code"]) in ret_code_mapping:
             return ret_code_mapping[str(status["ret_code"])]
          return ("r.status_code == 200, but I don't known happens", False)
       return ("r.status_code != 200", False)
    except Exception as e:
       return ("Catched an exception: '{}'".format(e), False)
+
 
 def get_via_possible_keys(keys, ht):
    for k in keys:
@@ -91,7 +103,8 @@ def get_via_possible_keys(keys, ht):
          return ht[k]
    return ""
 
-def login(url, username, password):
+
+def login(url: str, username: str, password: str, mac: str):
    parsed = requests.utils.urlparse(url)
    params = dict(x.split("=") for x in parsed.query.split("&"))
    wlan_user_ip = get_via_possible_keys(["UserIP", "wlanuserip"], params)
@@ -107,40 +120,98 @@ def login(url, username, password):
       "user_password": password,
       "wlan_user_ip": wlan_user_ip,
       "wlan_user_ipv6": "",
-      "wlan_user_mac": "000000000000",
+      "wlan_user_mac": mac,
       "wlan_ac_ip": wlan_ac_ip,
       "wlan_ac_name": wlan_ac_name,
-      "jsVersion": "3.3.2",
+      "jsVersion": "3.3.3",
       "v": "8094"
    }
 
-   msg, ok = login_over_http_or_https(parsed.netloc, params)
+   msg, ok = get_over_http_or_https(parsed.netloc, params)
    if ok:
       print(msg)
    else:
       eprint(msg)
 
+
+def logout(url: str, username: str, mac: str):
+   parsed = requests.utils.urlparse(url)
+   params = dict(x.split("=") for x in parsed.query.split("&"))
+   wlan_user_ip = get_via_possible_keys(["UserIP", "wlanuserip"], params)
+   wlan_ac_name = get_via_possible_keys(["wlanacname"], params)
+   wlan_ac_ip = get_via_possible_keys(["wlanacip"], params)
+
+   params = {
+      "c": "Portal",
+      "a": "unbind_mac",
+      "callback": "",
+      "user_account": username,
+      "wlan_user_ip": wlan_user_ip,
+      "wlan_user_mac": mac,
+      "jsVersion": "3.3.3",
+      "v": "8094"
+   }
+
+   # unbind_mac twice
+   print("unbinding mac...")
+   msg, ok = get_over_http_or_https(parsed.netloc, params)
+   msg, ok = get_over_http_or_https(parsed.netloc, params)
+
+   params = {
+      "c": "Portal",
+      "a": "logout",
+      "callback": "",
+      "login_method": "1",
+      "user_account": "drcom",
+      "user_password": "123",
+      "ac_logout": "1",
+      "register_mode": "1",
+      "wlan_user_ip": wlan_user_ip,
+      "wlan_user_ipv6": "",
+      "wlan_vlan_id": "0",
+      "wlan_user_mac": mac,
+      "wlan_ac_ip": "",
+      "wlan_ac_name": "",
+      "jsVersion": "3.3.3",
+      "v": "8094"
+   }
+
+   print("loging out...")
+   msg, ok = get_over_http_or_https(parsed.netloc, params)
+   if ok:
+      print(msg)
+   else:
+      eprint(msg)
+
+
 if __name__ == "__main__":
    username = args.username
    password = args.password
    isp = args.ISP
-   if username == None or password == None:
-      eprint("Please provide username and password\n")
-      parser.print_help()
-      exit(1)
+
+   mac = "000000000000"
+   if args.mac != None:
+      mac = args.mac
+
+   if args.link != None:
+      url, ok = args.link, True
+      if args.relogin:
+         logout(url, username, mac)
+   else:
+      if args.relogin:
+         print("relogin requires \"-l LINK\" !")
+      url, ok = get_redirect_url()
+
+   # logout do not accecpt username with ISP
    if isp == "c":
       username += "@cmcc"
    elif isp == "t":
       username += "@telecom"
    elif isp == "u":
       username += "@unicom"
-   if args.link != None:
-      url, ok = args.link, True
-   else:
-      url, ok = get_redirect_url()
    if ok:
       if url != "":
-         login(url, username, password)
+         login(url, username, password, mac)
       else:
          eprint("You've connected to the internet")
    else:
